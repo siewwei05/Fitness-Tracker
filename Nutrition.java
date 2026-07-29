@@ -1,0 +1,63 @@
+package model;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import java.io.IOException;
+import java.time.LocalDate;
+
+public class Nutrition  {
+
+    private int mealID;
+    private String mealDescription;
+    private Double calories;
+    private LocalDate date;
+
+    public int getMealID() {
+        return mealID;
+    }
+    public void setMealID(int mealID) {
+        this.mealID = mealID;
+    }
+
+    public String getMealDescription() {
+        return mealDescription;
+    }
+    public void setMealDescription(String mealDescription) {
+        this.mealDescription = mealDescription;
+    }
+
+    public Double getCalories() {
+        return calories;
+    }
+    public void setCalories(Double calories) {
+        this.calories = calories;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+
+    /*@Override
+    public void start(Stage stage) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(Nutrition.class.getResource("Nutrition.fxml"));
+        Scene scene = new Scene(fxmlLoader.load(), 1930, 1000);
+        stage.setTitle("Nutrition Page");
+        stage.setScene(scene);
+        stage.show();
+    }*/
+
+    public static class NutritionController {
+        public void onClickProfile() {
+            NutritionController nutri = new NutritionController();
+            nutri.onClickProfile();
+        }
+    }
+
+
+}

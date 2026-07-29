@@ -1,0 +1,53 @@
+package model;
+
+
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class FitnessGoal {
+    private int goalId;
+    private String description;
+    private String completionDate;
+    private String status;
+
+    public FitnessGoal(int goalId, String description, String completionDate, String status) {
+        this.goalId = goalId;
+        this.description = description;
+        this.completionDate = completionDate;
+        this.status = status;
+    }
+
+    public int getGoalId() {
+        return this.goalId;
+    }
+
+    public void setGoalId(int goalId) {
+        this.goalId = goalId;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCompletionDate() {
+        return this.completionDate;
+    }
+
+    public void setCompletionDate(String completionDate) {
+        this.completionDate = completionDate;
+    }
+
+    public String getStatus() {
+        return this.status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}
