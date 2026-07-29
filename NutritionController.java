@@ -1,0 +1,264 @@
+package Controller;
+
+import DAO.NutritionDAO;
+import SceneManager.SceneManager;
+import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class NutritionController {
+
+    @FXML
+    private Button AddMealButton;
+    @FXML
+    private TextArea AddMealDetails;
+    @FXML
+    private TextField AddCalorie;
+    @FXML
+    private DatePicker MealDate;
+    @FXML
+    private ScrollPane ScrollPane;
+    @FXML
+    private VBox mealContainer;
+    @FXML
+    private Button ReturnButton;
+    @FXML
+    private Button deleteMealButton;
+
+    private int mealID = 0;
+    private final NutritionDAO mealDAO = new NutritionDAO();
+    private static final String MEAL_FILE_PATH = "src/main/data/meals";
+
+    @FXML
+    private void onClickProfile() {
+        SceneManager.loadScene("/View/ProfileView.fxml");
+    }
+
+    @FXML
+    private void onClickReturn() {
+        SceneManager.loadScene("/View/HomePage.fxml");
+    }
+
+    @FXML
+    public void onAddMealDetails() {
+        String userInput1 = AddMealDetails.getText();
+        if (userInput1.isEmpty()) {
+            return;
+        }
+    }
+
+    @FXML
+    public void onAddCalorie() {
+        String userInput2 = AddCalorie.getText();
+        if (userInput2.isEmpty()) {
+            return;
+        }
+        AddCalorie.clear();
+    }
+
+    public void onSelectDate() {
+        LocalDate selectedDate = MealDate.getValue();
+        if (selectedDate == null) {
+            System.out.println("No date selected.");
+            // Handle the case where no date is selected
+            return;
+        }
+        String formattedDate = selectedDate.toString();
+        System.out.println("Selected date: " + formattedDate);
+        // Proceed with logic using formattedDate
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    // To create a file if it doesn't exist yet
+    public void initialize() {
+        File mealFile = new File(MEAL_FILE_PATH);
+        if (!mealFile.exists()) {
+            try {
+                mealFile.createNewFile();
+            } catch (IOException e) {
+                System.err.println("Error creating meal file: " + e.getMessage());
+            }
+        }
+    }
+
+    @FXML
+    private void goToProfile() {
+        SceneManager.loadScene("/View/ProfileView.fxml");
+    }
+
+    @FXML
+    public void onClickAddMeal() {
+        String mealDetail = AddMealDetails.getText();
+        String calorieText = AddCalorie.getText();
+        String selectedDate = (MealDate.getValue() != null) ? MealDate.getValue().toString() : null;
+
+        if (mealDetail == null || mealDetail.isEmpty()) {
+            showAlert("Error", "Meal name cannot be empty.");
+            return;
+        }
+        if (calorieText == null || calorieText.isEmpty()) {
+            showAlert("Error", "Calorie intake cannot be empty.");
+            return;
+        }
+        if (selectedDate == null) {
+            showAlert("Error", "Please select a date.");
+            return;
+        }
+
+        try {
+            int calories = Integer.parseInt(calorieText);
+
+            VBox mealDetails = new VBox();
+            Label mealLabel = new Label("Meal " + (++mealID));
+            Text displayMeals = new Text("Meal Detail: \n" + mealDetail);
+            Label calorieLabel = new Label("Calorie Intake: " + calories + " kcal");
+            Label dateLabel = new Label("Meal Date: " + selectedDate);
+
+            displayMeals.setWrappingWidth(200); // Set appropriate wrapping width
+            displayMeals.setStyle("-fx-fill: white;"); // Set text fill color to white
+
+            mealLabel.setStyle("-fx-background-color: black; -fx-background-radius: 50; -fx-font-family: 'Arial Rounded MT Bold'; -fx-font-size: 18px; -fx-text-fill: white;");
+            calorieLabel.setStyle("-fx-font-family: 'Arial Rounded MT Bold'; -fx-font-size: 15px; -fx-text-fill: white;");
+            dateLabel.setStyle("-fx-font-family: 'Arial Rounded MT Bold'; -fx-font-size: 15px; -fx-text-fill: white;");
+
+            mealDetails.getChildren().addAll(mealLabel, displayMeals, calorieLabel, dateLabel);
+            mealDetails.setStyle("-fx-background-color: rgba(170, 121, 211, 1); -fx-padding: 20; -fx-spacing: 10; -fx-background-radius: 40;");
+            mealContainer.getChildren().add(mealDetails);
+            mealContainer.setSpacing(10);
+
+            // Save meal to file
+            saveMealToFile(mealDetail, calories, selectedDate);
+
+            AddMealDetails.clear();
+            AddCalorie.clear();
+            MealDate.setValue(null);
+
+            // Toggle highlight color on click
+            mealDetails.setOnMouseClicked(event -> {
+                if (mealDetails.getStyle().contains("yellow")) {
+                    mealDetails.setStyle("-fx-background-color: rgba(170, 121, 211, 1); -fx-padding: 20; -fx-spacing: 10; -fx-background-radius: 40;");
+                } else {
+                    mealDetails.setStyle("-fx-background-color: yellow; -fx-padding: 20; -fx-spacing: 10; -fx-background-radius: 40; -fx-text-fill: black;");
+                }
+            });
+
+        } catch (NumberFormatException e) {
+            showAlert("Error", "Calorie intake must be a valid number.");
+        } catch (NullPointerException e) {
+            System.out.println("Error");
+        }
+    }
+
+    private void saveMealToFile(String mealDetail, int calories, String date) {
+        try (java.io.FileWriter writer = new java.io.FileWriter(MEAL_FILE_PATH, true)) {
+            writer.write(mealDetail + "," + calories + "," + date + System.lineSeparator());
+        } catch (java.io.IOException e) {
+            System.err.println("Error saving meal to file: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void deleteMeal() {
+        // Filter selected (yellow) meals
+        List<VBox> selectedMeals = mealContainer.getChildren().stream()
+                .filter(node -> node instanceof VBox && node.getStyle().contains("yellow"))
+                .map(node -> (VBox) node)
+                .collect(Collectors.toList());
+
+        if (selectedMeals.isEmpty()) {
+            showAlert("Error", "No meals selected to delete.");
+            return;
+        }
+        mealContainer.getChildren().removeAll(selectedMeals);
+
+        // Load remaining meals
+        try (java.io.FileWriter writer = new java.io.FileWriter(MEAL_FILE_PATH)) {
+            for (Node node : mealContainer.getChildren()) {
+                if (node instanceof VBox meal) {
+                    List<Label> labels = meal.getChildren().stream()
+                            .filter(child -> child instanceof Label)
+                            .map(child -> (Label) child)
+                            .collect(Collectors.toList());
+
+                    if (labels.size() >= 3) {
+                        String mealDetail = labels.get(1).getText().replace("Meal Detail: ", "");
+                        String calorieText = labels.get(2).getText().replace("Calorie Intake: ", "").replace(" kcal", "");
+                        String dateText = labels.get(3).getText().replace("Meal Date: ", "");
+
+                        writer.write(mealDetail + "," + calorieText + "," + dateText + System.lineSeparator());
+                    }
+                }
+            }
+        } catch (java.io.IOException e) {
+            System.err.println("Error updating meal file: " + e.getMessage());
+        }
+
+        System.out.println("Selected meals deleted.");
+    }
+
+    @FXML
+    public void loadStoredMeals() {
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(MEAL_FILE_PATH))) {
+            String line;
+            mealContainer.getChildren().clear();
+            mealID = 0;
+
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 3) {
+                    mealID++;
+                    String mealName = parts[0];
+                    String calories = parts[1];
+                    String date = parts[2];
+
+                    VBox mealDetails = new VBox();
+                    Label mealLabel = new Label("Meal " + mealID);
+                    Text displayMeals = new Text("Meal Detail: \n" + mealName);
+                    Label calorieLabel = new Label("Calorie Intake: " + calories + " kcal");
+                    Label dateLabel = new Label("Meal Date: " + date);
+
+                    displayMeals.setWrappingWidth(200); // Set appropriate wrapping width
+                    displayMeals.setStyle("-fx-fill: white;"); // Set text fill color to white
+
+                    mealLabel.setStyle("-fx-background-colour: black; -fx-background-radius: 50; -fx-font-family: 'Arial Rounded MT Bold'; -fx-font-size: 18px; -fx-text-fill: white;");
+                    displayMeals.setStyle("-fx-font-family: 'Arial Rounded MT Bold'; -fx-font-size: 15px; -fx-fill: white;");
+                    calorieLabel.setStyle("-fx-font-family: 'Arial Rounded MT Bold'; -fx-font-size: 15px; -fx-text-fill: white;");
+                    dateLabel.setStyle("-fx-font-family: 'Arial Rounded MT Bold'; -fx-font-size: 15px; -fx-text-fill: white;");
+
+                    mealDetails.getChildren().addAll(mealLabel, displayMeals, calorieLabel, dateLabel);
+                    mealDetails.setStyle("-fx-background-color: rgba(170, 121, 211, 1); -fx-padding: 20; -fx-spacing: 10; -fx-background-radius: 40;");
+                    mealContainer.getChildren().add(mealDetails);
+                    mealContainer.setSpacing(10);
+
+                    // Toggle highlight color on click
+                    mealDetails.setOnMouseClicked(event -> {
+                        if (mealDetails.getStyle().contains("yellow")) {
+                            mealDetails.setStyle("-fx-background-color: rgba(170, 121, 211, 1); -fx-padding: 20; -fx-spacing: 10; -fx-background-radius: 40;");
+                        } else {
+                            mealDetails.setStyle("-fx-background-color: yellow; -fx-padding: 20; -fx-spacing: 10; -fx-background-radius: 40; -fx-text-fill: black;");
+                        }
+                    });
+                }
+            }
+        } catch (java.io.FileNotFoundException e) {
+            System.err.println("Meal file not found, starting fresh.");
+        } catch (java.io.IOException e) {
+            System.err.println("Error reading meal file: " + e.getMessage());
+        }
+    }
+}
